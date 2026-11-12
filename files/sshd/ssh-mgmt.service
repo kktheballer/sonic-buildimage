@@ -12,7 +12,7 @@ After=sonic.target
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/mgmt-vrf-sshd-starter.sh
-Restart=no
+Restart=on-failure
 
 [Install]
 WantedBy=sonic.target
