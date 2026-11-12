@@ -1169,7 +1169,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.liststr_to_dict(output.strip()),
-            utils.liststr_to_dict("['10.0.0.100|161|mgmt', '2603:10e2:0:2902::8|161|mgmt', '10.1.0.32|161|', 'fc00:1::32|161|']"))
+            utils.liststr_to_dict("['10.0.0.100|161|mgmt', '2603:10e2:0:2902::8|161|mgmt', '10.1.0.32|161|', 'fc00:1::32|161|', '10.10.0.99|161|']"))
 
     def test_platform_asic_sensors_config(self):
         os.environ["PLATFORM"] = "x86_64-kvm_x86_64-r0"

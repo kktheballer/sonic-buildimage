@@ -13,6 +13,12 @@ After=sonic.target
 Type=simple
 ExecStart=/usr/local/bin/mgmt-vrf-sshd-starter.sh
 Restart=on-failure
+# 'ip vrf exec' (used by mgmt-vrf-sshd-starter.sh) binds a process to a VRF
+# by moving it into a dedicated cgroup, which systemd's sandboxing would
+# otherwise block. Matches files/image_config/chrony/override.conf, which
+# needs the same relaxation for its own 'ip vrf exec' use.
+ProtectControlGroups=no
+ProcSubset=all
 
 [Install]
 WantedBy=sonic.target
