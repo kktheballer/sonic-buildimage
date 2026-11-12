@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenSSH server daemon bound to the management VRF
+Documentation=man:sshd(8) man:sshd_config(5)
+Requires=config-setup.service
+After=config-setup.service
+After=interfaces-config.service
+After=ssh.service
+Wants=ssh.service
+BindsTo=sonic.target
+After=sonic.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/mgmt-vrf-sshd-starter.sh
+Restart=no
+
+[Install]
+WantedBy=sonic.target

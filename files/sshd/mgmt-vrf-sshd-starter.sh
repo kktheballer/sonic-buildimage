@@ -1,0 +1,30 @@
+#!/bin/sh
+#
+# Starts a second sshd process bound to the management VRF.
+#
+# net.ipv4.tcp_l3mdev_accept controls whether a socket bound in the
+# default VRF (such as the wildcard-listening sshd started by
+# ssh.service) can also accept connections that arrive on an interface
+# enslaved to a different VRF, e.g. "mgmt". When that sysctl is
+# disabled (see files/image_config/sysctl/90-sonic.conf), the
+# default-VRF sshd can no longer be reached over the mgmt VRF. This
+# script starts a dedicated sshd instance inside the mgmt VRF whenever
+# mgmt-VRF is enabled, using the same host keys and sshd_config as the
+# default instance. It is modeled on
+# files/image_config/chrony/chronyd-starter.sh.
+#
+# Known limitation: this script only evaluates MGMT_VRF_CONFIG when
+# ssh-mgmt.service starts. sonic-buildimage has no hook that restarts
+# ssh-mgmt.service when mgmt-VRF is toggled at runtime via
+# 'config vrf add/del mgmt'; that integration would need to be added
+# in sonic-utilities alongside the equivalent NTP restart hook.
+
+MGMT_VRF_ENABLED=$(sonic-db-cli CONFIG_DB HGET "MGMT_VRF_CONFIG|vrf_global" "mgmtVrfEnabled" 2>/dev/null)
+
+if [ "$MGMT_VRF_ENABLED" = "true" ]; then
+    exec ip vrf exec mgmt /usr/sbin/sshd -D -o PidFile=/run/sshd-mgmt.pid
+fi
+
+# mgmt-VRF is not enabled; the default-VRF sshd started by ssh.service
+# already provides connectivity, so there is nothing more to do here.
+exit 0

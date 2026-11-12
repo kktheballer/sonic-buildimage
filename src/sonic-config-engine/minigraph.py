@@ -2304,13 +2304,23 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if not is_multi_asic() and asic_name is None:
         results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
         port = '161'
+        # Bind the agent listener for management-interface addresses to the
+        # management VRF when it is enabled, so SNMP polling keeps working
+        # once net.ipv4.udp_l3mdev_accept is disabled (see
+        # files/image_config/sysctl/90-sonic.conf). Without this, the
+        # listener rendered by dockers/docker-snmp/snmpd.conf.j2 is left
+        # unbound to any VRF and the default-VRF socket can no longer
+        # accept requests that arrive over the mgmt VRF.
+        mgmt_vrf_enabled = mvrf.get('vrf_global', {}).get('mgmtVrfEnabled') == 'true'
+        mgmt_intf_keys = set(mgmt_intf.keys())
         for intf in list(mgmt_intf.keys()) + list(lo_intfs.keys()):
             ip_addr = ipaddress.ip_address(UNICODE_TYPE(intf[1].split('/')[0]))
             if ip_addr.version == 6 and ip_addr.is_link_local:
                 agent_addr = str(ip_addr) + '%' + intf[0]
             else:
                 agent_addr = str(ip_addr)
-            snmp_key = agent_addr + '|' + port + '|'
+            vrf = 'mgmt' if (mgmt_vrf_enabled and intf in mgmt_intf_keys) else ''
+            snmp_key = agent_addr + '|' + port + '|' + vrf
             results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
     else:
         results['SNMP_AGENT_ADDRESS_CONFIG'] = {}

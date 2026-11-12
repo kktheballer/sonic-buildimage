@@ -1161,7 +1161,16 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.liststr_to_dict(output.strip()),
             utils.liststr_to_dict("['192.168.200.15|161|', '100.0.0.6|161|', '100.0.0.7|161|', 'fe80::1%Management0|161|']"))
-   
+
+    def testsnmp_agent_address_config_mvrf(self):
+        # When mgmt-VRF is enabled, the management-interface entries should
+        # be bound to the mgmt VRF; loopback entries are unaffected.
+        argument = ['-m', os.path.join(self.test_dir, 't0-sample-graph-mvrf.xml'), '-p', self.port_config, '-v', 'SNMP_AGENT_ADDRESS_CONFIG.keys()|list']
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.liststr_to_dict(output.strip()),
+            utils.liststr_to_dict("['10.0.0.100|161|mgmt', '2603:10e2:0:2902::8|161|mgmt', '10.1.0.32|161|', 'fc00:1::32|161|']"))
+
     def test_platform_asic_sensors_config(self):
         os.environ["PLATFORM"] = "x86_64-kvm_x86_64-r0"
         argument = ["-H","--print-data"]

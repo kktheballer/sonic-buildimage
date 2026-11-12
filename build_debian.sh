@@ -536,6 +536,16 @@ EOF
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 sudo sed -i 's/^#ListenAddress ::/ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
+# Add an sshd instance explicitly bound to the management VRF, in addition
+# to the default-VRF instance above. This keeps SSH reachable over the
+# mgmt VRF now that net.ipv4.tcp_l3mdev_accept is disabled (see
+# files/image_config/sysctl/90-sonic.conf), since that sysctl stops the
+# default-VRF sshd socket from accepting connections that arrive via the
+# mgmt VRF.
+sudo cp files/sshd/mgmt-vrf-sshd-starter.sh $FILESYSTEM_ROOT/usr/local/bin/mgmt-vrf-sshd-starter.sh
+sudo cp files/sshd/ssh-mgmt.service $FILESYSTEM_ROOT/etc/systemd/system/ssh-mgmt.service
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable ssh-mgmt.service
+
 # Use libpam_systemd, since that's now needed for limiting login sessions
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libpam-systemd
 
